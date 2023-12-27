@@ -30,6 +30,16 @@ int CHUNK_GetNext(CHUNK_Iterator *iterator, CHUNK *chunk) {
     return 0;
 }
 
+int CHUNK_GetIthRecordInChunk(CHUNK *chunk, int i, Record *record) {
+    int blockId = chunk->from_BlockId + (i - 1) / HP_GetMaxRecordsInBlock(chunk->file_desc);
+    int cursor = (i - 1) % HP_GetMaxRecordsInBlock(chunk->file_desc);
+    
+    if (HP_GetRecord(chunk->file_desc, blockId, cursor, record) == -1) {
+        return -1;  // Failed to retrieve record
+    }
+    
+    return 0;
+}
 
 int CHUNK_UpdateIthRecord(CHUNK *chunk, int i, Record record) {
     int blockId = chunk->from_BlockId + (i - 1) / HP_GetMaxRecordsInBlock(chunk->file_desc);
