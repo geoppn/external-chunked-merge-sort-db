@@ -8,8 +8,6 @@
 #define OUT_NAME "out"
 
 
-
-
 int createAndPopulateHeapFile(char* filename);
 
 void sortPhase(int file_desc,int chunkSize);
@@ -25,8 +23,11 @@ int main() {
   //
   BF_Init(LRU);
   int file_desc = createAndPopulateHeapFile(FILE_NAME);
+  printf("slay1");
   sortPhase(file_desc,chunkSize);
+  printf("slay2");
   mergePhases(file_desc,chunkSize,bWay,&fileIterator);
+  printf("slay3");
 }
 
 int createAndPopulateHeapFile(char* filename){
