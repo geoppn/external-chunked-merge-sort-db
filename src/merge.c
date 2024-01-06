@@ -16,8 +16,8 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         // Merge 'chunksToMerge' chunks from input_FileDesc to output_FileDesc
         for (int j = 0; j < chunksToMerge; ++j) {
             // Determine the current chunk's starting and ending block IDs
-            int startBlockId = i * bWay * chunkSize + j * chunkSize + 1;
-            int endBlockId = startBlockId + chunkSize - 1;
+            int startBlockId = i * bWay * chunkSize + j * chunkSize;
+            int endBlockId = startBlockId + chunkSize;
             
             // Create CHUNK_Iterator for the current chunk
             CHUNK_Iterator iterator = CHUNK_CreateIterator(input_FileDesc, chunkSize);
@@ -52,7 +52,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         // Merge 'chunksToMerge' chunks from input_FileDesc to output_FileDesc
         for (int j = 0; j < chunksToMerge; ++j) {
             // Determine the current chunk's starting and ending block IDs
-            int startBlockId = numChunks * bWay * chunkSize + j * remainingBlocks + 1;
+            int startBlockId = numChunks * bWay * chunkSize + j * remainingBlocks;
             int endBlockId = totalBlocks;
             
             // Create CHUNK_Iterator for the current chunk
