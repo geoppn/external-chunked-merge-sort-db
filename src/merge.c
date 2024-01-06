@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
+    // Move the function call out of the constant expression
     int totalBlocks = HP_GetIdOfLastBlock(input_FileDesc);
     int numChunks = totalBlocks / chunkSize; // Calculate the total number of full chunks
     int remainingBlocks = totalBlocks % chunkSize; // Calculate the number of remaining blocks
@@ -15,9 +16,8 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         
         // Merge 'chunksToMerge' chunks from input_FileDesc to output_FileDesc
         for (int j = 0; j < chunksToMerge; ++j) {
-            // Determine the current chunk's starting and ending block IDs
+            // Determine the current chunk's starting block ID
             int startBlockId = i * bWay * chunkSize + j * chunkSize;
-            int endBlockId = startBlockId + chunkSize;
             
             // Create CHUNK_Iterator for the current chunk
             CHUNK_Iterator iterator = CHUNK_CreateIterator(input_FileDesc, chunkSize);
@@ -26,8 +26,8 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             // Initialize CHUNK for merging
             CHUNK chunk;
             chunk.file_desc = output_FileDesc;
-            chunk.from_BlockId = startBlockId;
-            chunk.to_BlockId = endBlockId;
+            chunk.from_BlockId = iterator.current;
+            chunk.to_BlockId = iterator.current + chunkSize;
             chunk.blocksInChunk = chunkSize;
             chunk.recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(input_FileDesc);
             
@@ -51,9 +51,8 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         
         // Merge 'chunksToMerge' chunks from input_FileDesc to output_FileDesc
         for (int j = 0; j < chunksToMerge; ++j) {
-            // Determine the current chunk's starting and ending block IDs
+            // Determine the current chunk's starting block ID
             int startBlockId = numChunks * bWay * chunkSize + j * remainingBlocks;
-            int endBlockId = totalBlocks;
             
             // Create CHUNK_Iterator for the current chunk
             CHUNK_Iterator iterator = CHUNK_CreateIterator(input_FileDesc, remainingBlocks);
@@ -62,8 +61,8 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             // Initialize CHUNK for merging
             CHUNK chunk;
             chunk.file_desc = output_FileDesc;
-            chunk.from_BlockId = startBlockId;
-            chunk.to_BlockId = endBlockId;
+            chunk.from_BlockId = iterator.current;
+            chunk.to_BlockId = iterator.current + remainingBlocks;
             chunk.blocksInChunk = remainingBlocks;
             chunk.recordsInChunk = remainingBlocks * HP_GetMaxRecordsInBlock(input_FileDesc);
             
