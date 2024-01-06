@@ -6,7 +6,7 @@
 CHUNK_Iterator CHUNK_CreateIterator(int fileDesc, int blocksInChunk){
     CHUNK_Iterator iterator;
     iterator.file_desc = fileDesc;
-    iterator.current = 1;  // ??????????????????? TEAM EDIT: WE CHANGED THE VALUE OF .CURRENT FROM 1 TO 0 TO START FROM THE FIRST BLOCK
+    iterator.current = 0;  // ??????????????????? TEAM EDIT: WE CHANGED THE VALUE OF .CURRENT FROM 1 TO 0 TO START FROM THE FIRST BLOCK
     iterator.blocksInChunk = blocksInChunk;
     iterator.lastBlocksID = HP_GetIdOfLastBlock(fileDesc);  // WE USE A HP_ FUNCTION TO GET THE ID OF THE LAST BLOCK
     
