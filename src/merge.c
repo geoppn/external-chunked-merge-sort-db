@@ -32,14 +32,13 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             chunk.recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(input_FileDesc);
             
             // Merge the chunk to the output file
-            while (iterator.current <= endBlockId) {
+            for (int k = 0; k < chunk.recordsInChunk; ++k) {
                 Record record;
-                if (CHUNK_GetIthRecordInChunk(&chunk, iterator.current, &record) == 0) {
-                    CHUNK_UpdateIthRecord(&chunk, iterator.current, record); // Update records in the output chunk
+                if (CHUNK_GetIthRecordInChunk(&chunk, k, &record) == 0) {
+                    CHUNK_UpdateIthRecord(&chunk, k, record); // Update records in the output chunk
                 } else {
                     break; // No more records in this chunk
                 }
-                iterator.current++; // Move to the next block within the chunk
             }
         }
     }
@@ -69,14 +68,13 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             chunk.recordsInChunk = remainingBlocks * HP_GetMaxRecordsInBlock(input_FileDesc);
             
             // Merge the chunk to the output file
-            while (iterator.current <= endBlockId) {
+            for (int k = 0; k < chunk.recordsInChunk; ++k) {
                 Record record;
-                if (CHUNK_GetIthRecordInChunk(&chunk, iterator.current, &record) == 0) {
-                    CHUNK_UpdateIthRecord(&chunk, iterator.current, record); // Update records in the output chunk
+                if (CHUNK_GetIthRecordInChunk(&chunk, k, &record) == 0) {
+                    CHUNK_UpdateIthRecord(&chunk, k, record); // Update records in the output chunk
                 } else {
                     break; // No more records in this chunk
                 }
-                iterator.current++; // Move to the next block within the chunk
             }
         }
     }
