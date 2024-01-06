@@ -19,12 +19,12 @@ void sort_FileInChunks(int file_desc, int numBlocksInChunk) {
     int remainingBlocks = totalBlocks % numBlocksInChunk; // Calculate the number of remaining blocks
 
     // Sort records within each full chunk
-    for (int i = 1; i <= numChunks; ++i) {
+    for (int i = 0; i < numChunks; ++i) {
         // Create CHUNK for the current chunk
         CHUNK chunk;
         chunk.file_desc = file_desc;
-        chunk.from_BlockId = (i - 1) * numBlocksInChunk + 1;
-        chunk.to_BlockId = i * numBlocksInChunk;
+        chunk.from_BlockId = i * numBlocksInChunk;
+        chunk.to_BlockId = (i + 1) * numBlocksInChunk;
         chunk.blocksInChunk = numBlocksInChunk;
         chunk.recordsInChunk = numBlocksInChunk * HP_GetMaxRecordsInBlock(file_desc);
         
@@ -37,7 +37,7 @@ void sort_FileInChunks(int file_desc, int numBlocksInChunk) {
         // Create CHUNK for the remaining blocks
         CHUNK chunk;
         chunk.file_desc = file_desc;
-        chunk.from_BlockId = numChunks * numBlocksInChunk + 1;
+        chunk.from_BlockId = numChunks * numBlocksInChunk;
         chunk.to_BlockId = totalBlocks;
         chunk.blocksInChunk = remainingBlocks;
         chunk.recordsInChunk = remainingBlocks * HP_GetMaxRecordsInBlock(file_desc);
@@ -47,14 +47,13 @@ void sort_FileInChunks(int file_desc, int numBlocksInChunk) {
     }
 }
 
-
 void sort_Chunk(CHUNK* chunk) {
     int numRecords = chunk->recordsInChunk;
     Record records[numRecords];
     
     // Read records from the chunk
-    for (int i = 1; i <= numRecords; ++i) {
-        CHUNK_GetIthRecordInChunk(chunk, i, &records[i - 1]);
+    for (int i = 0; i < numRecords; ++i) {
+        CHUNK_GetIthRecordInChunk(chunk, i, &records[i]);
     }
     
     // Sort the records based on the 'name' field
@@ -70,7 +69,7 @@ void sort_Chunk(CHUNK* chunk) {
     }
     
     // Write sorted records back to the chunk
-    for (int i = 1; i <= numRecords; ++i) {
-        CHUNK_UpdateIthRecord(chunk, i, records[i - 1]);
+    for (int i = 0; i < numRecords; ++i) {
+        CHUNK_UpdateIthRecord(chunk, i, records[i]);
     }
 }
