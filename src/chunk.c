@@ -22,7 +22,7 @@ int CHUNK_GetNext(CHUNK_Iterator *iterator, CHUNK *chunk) {
     // Set CHUNK details
     chunk->file_desc = iterator->file_desc;
     chunk->from_BlockId = iterator->current;
-    chunk->to_BlockId = iterator->current + iterator->blocksInChunk - 1;
+    chunk->to_BlockId = iterator->current + iterator->blocksInChunk;
     
     // Update iterator for the next CHUNK
     iterator->current += iterator->blocksInChunk;
@@ -31,7 +31,7 @@ int CHUNK_GetNext(CHUNK_Iterator *iterator, CHUNK *chunk) {
 }
 
 int CHUNK_GetIthRecordInChunk(CHUNK *chunk, int i, Record *record) {
-    int blockId = chunk->from_BlockId + (i - 1) / HP_GetMaxRecordsInBlock(chunk->file_desc);
+    int blockId = chunk->from_BlockId + i  / HP_GetMaxRecordsInBlock(chunk->file_desc);
     int cursor = (i - 1) % HP_GetMaxRecordsInBlock(chunk->file_desc);
     
     if (HP_GetRecord(chunk->file_desc, blockId, cursor, record) == -1) {
@@ -43,7 +43,7 @@ int CHUNK_GetIthRecordInChunk(CHUNK *chunk, int i, Record *record) {
 
 int CHUNK_UpdateIthRecord(CHUNK *chunk, int i, Record record) {
     int blockId = chunk->from_BlockId + (i - 1) / HP_GetMaxRecordsInBlock(chunk->file_desc);
-    int cursor = (i - 1) % HP_GetMaxRecordsInBlock(chunk->file_desc);
+    int cursor = i % HP_GetMaxRecordsInBlock(chunk->file_desc);
     
     if (HP_UpdateRecord(chunk->file_desc, blockId, cursor, record) == -1) {
         return -1;  // Failed to update record
@@ -54,10 +54,10 @@ int CHUNK_UpdateIthRecord(CHUNK *chunk, int i, Record record) {
 
 void CHUNK_Print(CHUNK chunk) {
     Record record;
-    for (int i = chunk.from_BlockId; i <= chunk.to_BlockId; ++i) {
+    for (int i = chunk.from_BlockId; i < chunk.to_BlockId; ++i) {
         int maxRecords = HP_GetMaxRecordsInBlock(chunk.file_desc);
         for (int j = 0; j < maxRecords; ++j) {
-            if (CHUNK_GetIthRecordInChunk(&chunk, (i - chunk.from_BlockId) * maxRecords + j + 1, &record) == 0) {
+            if (CHUNK_GetIthRecordInChunk(&chunk, (i - chunk.from_BlockId) * maxRecords + j, &record) == 0) {
                 // Print record details (adjust as per your Record structure)
                 printf("Record: %s %s %s %d %s\n", record.name, record.surname, record.city, record.id, record.delimiter); // TEAM EDIT: WE EDITED THE PRINT TO CORRECTLY PRINT A RECORD BASED ON THE RECORD.H STRUCT
             } else {
