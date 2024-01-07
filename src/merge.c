@@ -11,13 +11,14 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         int remainingChunks = numChunks - i;
         int chunksToMerge = remainingChunks < bWay ? remainingChunks : bWay;
         
+        // Merge 'chunksToMerge' chunks from input_FileDesc to output_FileDesc
         for (int j = 0; j < chunksToMerge; ++j) {
             CHUNK_Iterator iterator = CHUNK_CreateIterator(input_FileDesc, chunkSize);
-            iterator.current = i * bWay + j;
+            iterator.current = i + j;
             
             CHUNK chunk;
             chunk.file_desc = output_FileDesc;
-            chunk.from_BlockId = iterator.current * chunkSize;
+            chunk.from_BlockId = i * chunkSize;
             chunk.to_BlockId = chunk.from_BlockId + chunkSize - 1;
             chunk.blocksInChunk = chunkSize;
             chunk.recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(input_FileDesc);
@@ -39,7 +40,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         
         CHUNK chunk;
         chunk.file_desc = output_FileDesc;
-        chunk.from_BlockId = iterator.current * chunkSize;
+        chunk.from_BlockId = numChunks * chunkSize;
         chunk.to_BlockId = chunk.from_BlockId + remainingBlocks - 1;
         chunk.blocksInChunk = remainingBlocks;
         chunk.recordsInChunk = remainingBlocks * HP_GetMaxRecordsInBlock(input_FileDesc);
