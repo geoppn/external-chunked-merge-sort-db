@@ -9,7 +9,15 @@
 #include "chunk.h"
 
 bool shouldSwap(Record* rec1, Record* rec2) {
-    return strcmp(rec1->name, rec2->name) > 0;
+    int nameComparison = strcmp(rec1->name, rec2->name);
+
+    if (nameComparison == 0) {
+        // If names are the same, compare based on surname
+        return strcmp(rec1->surname, rec2->surname) > 0;
+    } else {
+        // Names are different, sort based on name
+        return nameComparison > 0;
+    }
 }
 
 
@@ -18,13 +26,16 @@ void sort_FileInChunks(int file_desc, int numBlocksInChunk) {
     int numChunks = totalBlocks / numBlocksInChunk; // Calculate the total number of full chunks
     int remainingBlocks = totalBlocks % numBlocksInChunk; // Calculate the number of remaining blocks
 
+    // Adjust for block 0 (metadata)
+    int firstBlock = 1; // Start from block 1 to exclude metadata
+
     // Sort records within each full chunk
     for (int i = 0; i < numChunks; ++i) {
         // Create CHUNK for the current chunk
         CHUNK chunk;
         chunk.file_desc = file_desc;
-        chunk.from_BlockId = i * numBlocksInChunk;
-        chunk.to_BlockId = (i + 1) * numBlocksInChunk;
+        chunk.from_BlockId = firstBlock + i * numBlocksInChunk;
+        chunk.to_BlockId = (i + 1) * numBlocksInChunk; // TEAM EDIT: REMOVED -1 AND FIRSTBLOCK 
         chunk.blocksInChunk = numBlocksInChunk;
         chunk.recordsInChunk = numBlocksInChunk * HP_GetMaxRecordsInBlock(file_desc);
         
@@ -37,15 +48,22 @@ void sort_FileInChunks(int file_desc, int numBlocksInChunk) {
         // Create CHUNK for the remaining blocks
         CHUNK chunk;
         chunk.file_desc = file_desc;
-        chunk.from_BlockId = numChunks * numBlocksInChunk;
-        chunk.to_BlockId = totalBlocks;
-        chunk.blocksInChunk = remainingBlocks;
-        chunk.recordsInChunk = remainingBlocks * HP_GetMaxRecordsInBlock(file_desc);
+        chunk.from_BlockId = firstBlock + numChunks * numBlocksInChunk;
+        chunk.to_BlockId = totalBlocks; 
+        // Calculate the actual number of records in the last block
+        int recordsInLastBlock = HP_GetRecordCounter(file_desc, chunk.to_BlockId);
         
-        // Sort the chunk
+        // Calculate the total number of records in the last chunk
+        int recordsInLastChunk = (remainingBlocks - 1) * HP_GetMaxRecordsInBlock(file_desc) + recordsInLastBlock;
+        
+        chunk.blocksInChunk = remainingBlocks;
+        chunk.recordsInChunk = recordsInLastChunk;
+        
+        // Sort the last chunk
         sort_Chunk(&chunk);
     }
 }
+
 
 void sort_Chunk(CHUNK* chunk) {
     int numRecords = chunk->recordsInChunk;
