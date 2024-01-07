@@ -28,7 +28,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
 
             CHUNK chunk;
             chunk.file_desc = output_FileDesc;
-            chunk.from_BlockId = i * chunkSize;
+            chunk.from_BlockId = (i + j) * chunkSize;
             chunk.to_BlockId = chunk.from_BlockId + chunkSize - 1;
             chunk.blocksInChunk = chunkSize;
             chunk.recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(input_FileDesc);
