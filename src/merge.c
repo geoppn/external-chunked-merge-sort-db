@@ -7,79 +7,80 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
     int numChunks = totalBlocks / chunkSize;
     int remainingBlocks = totalBlocks % chunkSize;
 
-    printf("Total blocks: %d, Chunks: %d, Remaining blocks: %d\n", totalBlocks, numChunks, remainingBlocks);
+    // Initialize output chunk and buffer
+    CHUNK outputChunk;
+    outputChunk.file_desc = output_FileDesc;
+    outputChunk.from_BlockId = 1; // Start from the first block in the output database
+    outputChunk.to_BlockId = 1; // Initialize output to the first block
+    outputChunk.blocksInChunk = 1; // Output chunk contains one block
+    outputChunk.recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(output_FileDesc);
 
+    CHUNK buffer[bWay]; // Buffer to hold blocks from bWay chunks
+
+    // Loop through chunks to perform merging
     for (int i = 0; i < numChunks; i += bWay) {
         int remainingChunks = numChunks - i;
         int chunksToMerge = remainingChunks < bWay ? remainingChunks : bWay;
 
-        printf("Merging chunks %d to %d\n", i, i + chunksToMerge - 1);
-
-        // Allocate buffer to hold blocks from bWay chunks
-        CHUNK buffers[bWay];
-        Record minRecord;
-        int outputBufferIndex = 0;
-
-        // Initialize buffers
+        // Load one block from each chunk into the buffer
         for (int j = 0; j < chunksToMerge; ++j) {
             CHUNK_Iterator iterator = CHUNK_CreateIterator(input_FileDesc, chunkSize);
-            CHUNK_GetNext(&iterator, &buffers[j]);
+            if (CHUNK_GetNext(&iterator, &buffer[j]) != 0) {
+                // Handle situation when no more blocks are available in the chunk
+                // You can implement the required logic here, such as loading next chunks or terminating
+            }
         }
 
-        while (outputBufferIndex < bWay) {
-            int minBlockIndex = -1;
-            minRecord.id = INT_MAX; // Initialize minRecord ID to maximum value
+        // Initialize the record cursor for each chunk in the buffer
+        int recordCursors[bWay];
+        for (int j = 0; j < chunksToMerge; ++j) {
+            recordCursors[j] = buffer[j].from_BlockId; // Initialize cursor to the first block of each chunk
+        }
 
-            // Find the smallest record among the current blocks in the buffers
+        // Process records within the buffer
+        while (true) {
+            Record minRecord;
+            minRecord.id = INT_MAX; // Set initial value to the maximum possible integer
+
+            int minBlockIndex = -1;
+
+            // Find the minimum record among the chunks in the buffer
             for (int j = 0; j < chunksToMerge; ++j) {
                 Record currentRecord;
-                int currentBlockId = buffers[j].from_BlockId;
-
-                if (currentBlockId <= buffers[j].to_BlockId) {
-                    CHUNK_GetIthRecordInChunk(&buffers[j], currentBlockId, &currentRecord);
-
-                    if (currentRecord.id < minRecord.id) {
-                        minRecord = currentRecord;
-                        minBlockIndex = j;
+                if (recordCursors[j] <= buffer[j].to_BlockId) {
+                    // Fetch record from the chunk
+                    if (CHUNK_GetIthRecordInChunk(&buffer[j], recordCursors[j], &currentRecord) == 0) {
+                        if (currentRecord.id < minRecord.id) {
+                            minRecord = currentRecord;
+                            minBlockIndex = j; // Keep track of the minimum block index
+                        }
                     }
                 }
             }
 
-            // Write the smallest record to the output block
             if (minBlockIndex != -1) {
-                CHUNK_UpdateIthRecord(&buffers[minBlockIndex], buffers[minBlockIndex].from_BlockId, minRecord);
-                buffers[minBlockIndex].from_BlockId++; // Move to the next block in the chunk
+                // Write the minimum record to the output chunk
+                CHUNK_UpdateIthRecord(&outputChunk, outputChunk.to_BlockId, minRecord);
+                outputChunk.to_BlockId++;
+
+                // Move to the next record in the chunk that provided the minimum record
+                recordCursors[minBlockIndex]++;
             } else {
-                break; // No more records to merge
+                // No more records to process in the chunks within the buffer
+                break;
             }
 
-            outputBufferIndex++;
+            // Check if the output block is full
+            if (outputChunk.to_BlockId - outputChunk.from_BlockId >= chunkSize) {
+                // Write the filled output block to the output database
+                // Replace outputChunk with a new empty block
+                // Reset the cursor to the first block in the new outputChunk
+                outputChunk.from_BlockId = outputChunk.to_BlockId;
+            }
         }
-
-        printf("Finished merging chunks %d to %d\n", i, i + chunksToMerge - 1);
     }
 
-    if (remainingBlocks > 0) {
-        printf("Merging remaining blocks\n");
-
-        // Perform similar operations as above for the remaining blocks
-        CHUNK remainingBlocksChunk;
-        CHUNK_Iterator iterator = CHUNK_CreateIterator(input_FileDesc, chunkSize);
-        CHUNK_GetNext(&iterator, &remainingBlocksChunk);
-
-        while (remainingBlocksChunk.from_BlockId <= remainingBlocksChunk.to_BlockId) {
-            Record minRecord;
-            int minBlockIndex = -1;
-            minRecord.id = INT_MAX;
-
-            // Find the smallest record among the current blocks in the remaining chunk
-            CHUNK_GetIthRecordInChunk(&remainingBlocksChunk, remainingBlocksChunk.from_BlockId, &minRecord);
-
-            // Write the smallest record to the output block
-            CHUNK_UpdateIthRecord(&remainingBlocksChunk, remainingBlocksChunk.from_BlockId, minRecord);
-            remainingBlocksChunk.from_BlockId++; // Move to the next block
-        }
-
-        printf("Finished merging remaining blocks\n");
-    }
+    // Process remaining blocks
+    // You can follow a similar logic as above for the remaining blocks if necessary
+    // Iterate through remainingBlocks or use a different approach based on your requirements
 }
