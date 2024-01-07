@@ -5,16 +5,19 @@
 
 CHUNK_Iterator CHUNK_CreateIterator(int fileDesc, int blocksInChunk){
     CHUNK_Iterator iterator;
-    iterator.file_desc = fileDesc;
-    iterator.current = 0;  // ??????????????????? TEAM EDIT: WE CHANGED THE VALUE OF .CURRENT FROM 1 TO 0 TO START FROM THE FIRST BLOCK
+    iterator.file_desc = fileDesc; 
+    iterator.current = 1;  // Start from the first block
     iterator.blocksInChunk = blocksInChunk;
-    iterator.lastBlocksID = HP_GetIdOfLastBlock(fileDesc);  // WE USE A HP_ FUNCTION TO GET THE ID OF THE LAST BLOCK
+    iterator.lastBlocksID = HP_GetIdOfLastBlock(fileDesc);  
     
     return iterator;
 }
 
-int CHUNK_GetNext(CHUNK_Iterator *iterator, CHUNK *chunk) {
-    if (iterator->current > iterator->lastBlocksID) {
+int CHUNK_GetNext(CHUNK_Iterator *iterator, CHUNK *chunk) { // chatgpt said that current is the NEXT block ,we decided its the CURRENT block (duh)
+    // Increment current to point to the next chunk
+    iterator->current += iterator->blocksInChunk;
+
+    if (iterator->current == iterator->lastBlocksID) {
         // No more chunks to read
         return -1;
     }
@@ -22,17 +25,14 @@ int CHUNK_GetNext(CHUNK_Iterator *iterator, CHUNK *chunk) {
     // Set CHUNK details
     chunk->file_desc = iterator->file_desc;
     chunk->from_BlockId = iterator->current;
-    chunk->to_BlockId = iterator->current + iterator->blocksInChunk;
-    
-    // Update iterator for the next CHUNK
-    iterator->current += iterator->blocksInChunk;
+    chunk->to_BlockId = iterator->current + iterator->blocksInChunk - 1; // -1 because current is now the first block of the chunk
     
     return 0;
 }
 
 int CHUNK_GetIthRecordInChunk(CHUNK *chunk, int i, Record *record) {
-    int blockId = chunk->from_BlockId + i  / HP_GetMaxRecordsInBlock(chunk->file_desc);
-    int cursor = (i - 1) % HP_GetMaxRecordsInBlock(chunk->file_desc);
+    int blockId = chunk->from_BlockId + (i  / HP_GetMaxRecordsInBlock(chunk->file_desc));
+    int cursor = i % HP_GetMaxRecordsInBlock(chunk->file_desc);
     
     if (HP_GetRecord(chunk->file_desc, blockId, cursor, record) == -1) {
         return -1;  // Failed to retrieve record
@@ -42,7 +42,7 @@ int CHUNK_GetIthRecordInChunk(CHUNK *chunk, int i, Record *record) {
 }
 
 int CHUNK_UpdateIthRecord(CHUNK *chunk, int i, Record record) {
-    int blockId = chunk->from_BlockId + (i - 1) / HP_GetMaxRecordsInBlock(chunk->file_desc);
+    int blockId = chunk->from_BlockId + (i / HP_GetMaxRecordsInBlock(chunk->file_desc));
     int cursor = i % HP_GetMaxRecordsInBlock(chunk->file_desc);
     
     if (HP_UpdateRecord(chunk->file_desc, blockId, cursor, record) == -1) {
@@ -54,8 +54,8 @@ int CHUNK_UpdateIthRecord(CHUNK *chunk, int i, Record record) {
 
 void CHUNK_Print(CHUNK chunk) {
     Record record;
-    for (int i = chunk.from_BlockId; i < chunk.to_BlockId; ++i) {
-        int maxRecords = HP_GetMaxRecordsInBlock(chunk.file_desc);
+    int maxRecords = HP_GetMaxRecordsInBlock(chunk.file_desc); // WE MOVED THIS LINE OUT OF THE FOR LOOP
+    for (int i = chunk.from_BlockId; i <= chunk.to_BlockId; ++i) {
         for (int j = 0; j < maxRecords; ++j) {
             if (CHUNK_GetIthRecordInChunk(&chunk, (i - chunk.from_BlockId) * maxRecords + j, &record) == 0) {
                 // Print record details (adjust as per your Record structure)
@@ -80,7 +80,7 @@ CHUNK_RecordIterator CHUNK_CreateRecordIterator(CHUNK *chunk) {
 
 
 int CHUNK_GetNextRecord(CHUNK_RecordIterator *iterator, Record *record) {
-    if (iterator->currentBlockId > iterator->chunk.to_BlockId) {
+    if (iterator->currentBlockId == iterator->chunk.to_BlockId) { // we changed < to == slay
         return -1;  // No more records
     }
     
