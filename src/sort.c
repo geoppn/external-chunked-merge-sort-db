@@ -41,7 +41,6 @@ void sort_FileInChunks(int file_desc, int numBlocksInChunk) {
         
         // Sort the chunk
         sort_Chunk(&chunk);
-        CHUNK_Print(chunk);
     }
 
     // If there are remaining blocks, sort them as well
@@ -62,7 +61,6 @@ void sort_FileInChunks(int file_desc, int numBlocksInChunk) {
         
         // Sort the last chunk
         sort_Chunk(&chunk);
-        CHUNK_Print(chunk);
     }
 }
 

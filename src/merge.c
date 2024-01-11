@@ -46,4 +46,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             hasMoreRecords[minIndex] = CHUNK_GetNextRecord(&recordIterators[minIndex], &currentRecords[minIndex]) == 0;
         }
     }
+    for (int blockId = 1; blockId <= 56; ++blockId) {
+        HP_PrintBlockEntries(output_FileDesc, blockId);
+    }
 }
