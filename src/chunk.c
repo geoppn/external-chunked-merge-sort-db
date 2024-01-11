@@ -13,22 +13,23 @@ CHUNK_Iterator CHUNK_CreateIterator(int fileDesc, int blocksInChunk){
     return iterator;
 }
 
-int CHUNK_GetNext(CHUNK_Iterator *iterator, CHUNK *chunk) { // chatgpt said that current is the NEXT block ,we decided its the CURRENT block (duh)
-    // Increment current to point to the next chunk
-    iterator->current += iterator->blocksInChunk;
-
-    if (iterator->current == iterator->lastBlocksID) {
-        // No more chunks to read
-        return -1;
-    }
-    
+int CHUNK_GetNext(CHUNK_Iterator *iterator, CHUNK *chunk) {
     // Set CHUNK details
     chunk->file_desc = iterator->file_desc;
     chunk->from_BlockId = iterator->current;
-    chunk->to_BlockId = iterator->current + iterator->blocksInChunk - 1; // -1 because current is now the first block of the chunk
-    
+    chunk->to_BlockId = iterator->current + iterator->blocksInChunk - 1;
+
+    // Move to the next chunk
+    iterator->current += iterator->blocksInChunk;
+
+    if (iterator->current > iterator->lastBlocksID) {
+        // No more chunks to read
+        return -1;
+    }
+
     return 0;
 }
+
 
 int CHUNK_GetIthRecordInChunk(CHUNK *chunk, int i, Record *record) {
     int blockId = chunk->from_BlockId + (i  / HP_GetMaxRecordsInBlock(chunk->file_desc));
