@@ -50,9 +50,7 @@ int CHUNK_UpdateIthRecord(CHUNK *chunk, int i, Record record) {
     if (HP_UpdateRecord(chunk->file_desc, blockId, cursor, record) == -1) {
         return -1;  // Failed to update record
     }
-    printf("pinned flop %d \n",blockId);
-    printf(" %d \n",HP_Unpin(chunk->file_desc, blockId));  // Unpin the block
-    printf("unpinned slay %d \n", blockId);
+    HP_Unpin(chunk->file_desc, blockId);  // Unpin the block
     return 0;
 }
 
@@ -91,6 +89,8 @@ int CHUNK_GetNextRecord(CHUNK_RecordIterator *iterator, Record *record) {
     if (HP_GetRecord(iterator->chunk.file_desc, iterator->currentBlockId, iterator->cursor, record) == -1) {
         return -1;  // Failed to retrieve record
     }
+
+    HP_Unpin(iterator->chunk.file_desc, iterator->currentBlockId);  
     
     // Move to the next record
     iterator->cursor++;

@@ -29,7 +29,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             // Find smallest record
             int minIndex = -1;
             for (int i = 0; i < bWay && round + i < numChunks; ++i) {
-                if (hasMoreRecords[i] && (minIndex == -1 || currentRecords[i].id < currentRecords[minIndex].id)) {
+                if (hasMoreRecords[i] && (minIndex == -1 || shouldSwap(&currentRecords[minIndex], &currentRecords[i]))) {
                     minIndex = i;
                 }
             }
@@ -45,8 +45,5 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             // Get next record from the chunk that provided the smallest record
             hasMoreRecords[minIndex] = CHUNK_GetNextRecord(&recordIterators[minIndex], &currentRecords[minIndex]) == 0;
         }
-    }
-    for (int blockId = 1; blockId <= 56; ++blockId) {
-        HP_PrintBlockEntries(output_FileDesc, blockId);
     }
 }
