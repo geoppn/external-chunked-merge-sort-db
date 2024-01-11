@@ -1,14 +1,12 @@
 #include <merge.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include "chunk.h"  // Assume you have a header file for CHUNK functions
-#include "hp_file.h"  // Assume you have a header file for HP functions
 
-void merge(int input_FileDesc[], int numChunks, int output_FileDesc, int chunkSize) {
+void merge(int input_FileDesc, int numChunks, int output_FileDesc, int chunkSize) {
     // Create CHUNK Iterators for each input chunk
     CHUNK_Iterator chunkIterators[numChunks];
     for (int i = 0; i < numChunks; ++i) {
-        chunkIterators[i] = CHUNK_CreateIterator(input_FileDesc[i], chunkSize);
+        chunkIterators[i] = CHUNK_CreateIterator(input_FileDesc, chunkSize);
     }
 
     // Initialize a buffer to hold one block from each input chunk
