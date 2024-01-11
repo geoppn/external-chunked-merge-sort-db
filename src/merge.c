@@ -27,7 +27,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
     while (true) {
         // Find smallest record
         int minIndex = -1;
-        for (int i = 0; i < bWay; ++i) {
+        for (int i = 0; i < numChunks; ++i) { // Use numChunks here, not bWay
             if (hasMoreRecords[i] && (minIndex == -1 || currentRecords[i].id < currentRecords[minIndex].id)) {
                 minIndex = i;
             }
