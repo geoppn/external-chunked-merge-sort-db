@@ -46,11 +46,10 @@ int CHUNK_GetIthRecordInChunk(CHUNK *chunk, int i, Record *record) {
 int CHUNK_UpdateIthRecord(CHUNK *chunk, int i, Record record) {
     int blockId = chunk->from_BlockId + (i / HP_GetMaxRecordsInBlock(chunk->file_desc));
     int cursor = i % HP_GetMaxRecordsInBlock(chunk->file_desc);
-    printf("pinned flop %d \n",blockId);
     if (HP_UpdateRecord(chunk->file_desc, blockId, cursor, record) == -1) {
         return -1;  // Failed to update record
     }
-
+    printf("pinned flop %d \n",blockId);
     HP_Unpin(chunk->file_desc, blockId);  // Unpin the block
     printf("unpinned slay %d \n", blockId);
     return 0;
