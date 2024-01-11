@@ -61,16 +61,41 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
 
             // Update the iterators for the next chunk
             chunkIterators[i + j] = chunkIterator;
-            recordIterators[i + j] = CHUNK_CreateRecordIterator(&chunkIterators[i + j]);
+            recordIterators[i + j] = CHUNK_CreateRecordIterator(&chunk);
         }
     }
 
     // Handle remaining blocks if any
     if (remainingBlocks > 0) {
+        CHUNK_Iterator remainingChunkIterator = chunkIterators[numChunks - 1];
+        CHUNK_RecordIterator remainingRecordIterator = CHUNK_CreateRecordIterator(&remainingChunkIterator);
+
         // Merge remaining blocks
         for (int i = 0; i < remainingBlocks; ++i) {
-            // Your merging logic here for remaining blocks
-            // (Similar to the logic inside the nested loop above)
+            Record minRecord;
+
+            // Initialize minRecord with a placeholder
+            if (CHUNK_GetNextRecord(&remainingRecordIterator, &minRecord) == 0) {
+                // Loop through the rest of the records in the block and find the minimum record
+                for (int k = 1; k < HP_GetMaxRecordsInBlock(input_FileDesc); ++k) {
+                    Record currentRecord;
+                    if (CHUNK_GetNextRecord(&remainingRecordIterator, &currentRecord) == 0) {
+                        if (shouldSwap(&currentRecord, &minRecord) < 0) {
+                            minRecord = currentRecord;
+                        }
+                    } else {
+                        // No more records in this block
+                        break;
+                    }
+                }
+
+                // Write the minimum record to the output
+                if (HP_InsertEntry(output_FileDesc, minRecord) != 1) {
+                    // Handle error
+                    fprintf(stderr, "Error: Failed to insert record into the output file.\n");
+                    return;
+                }
+            }
         }
     }
 }
