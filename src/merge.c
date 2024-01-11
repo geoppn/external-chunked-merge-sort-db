@@ -61,7 +61,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
 
             // Update the iterators for the next chunk
             chunkIterators[i + j] = chunkIterator;
-            recordIterators[i + j] = CHUNK_CreateRecordIterator(&chunk);
+            recordIterators[i + j] = CHUNK_CreateRecordIterator(&chunkIterator);
         }
     }
 
