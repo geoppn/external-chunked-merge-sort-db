@@ -47,8 +47,8 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
     }
     int numBlocks = 56;
     for (int i = 0; i < numBlocks; ++i) {
-        if (HP_PrintBlockEntries(output_FileDesc, i) != 0) {
-            printf("Failed to print entries for block %d\n", i);
+        if (HP_Unpin(input_FileDesc, i) != 0) {
+            printf("Failed to unpin block %d\n", i);
         }
     }
 }
