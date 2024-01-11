@@ -60,12 +60,10 @@ void mergePhases(int inputFileDesc,int chunkSize,int bWay, int* fileCounter){
     merge(inputFileDesc, chunkSize, bWay, oututFileDesc );
     printf("slayQUACK");
     HP_CloseFile(inputFileDesc);
-    printf("closed FLOP input \n");
     chunkSize*=bWay;
     inputFileDesc = oututFileDesc;
   }
   HP_CloseFile(oututFileDesc);
-  printf("closed FLOP output \n");
 }
 
 /*Creates a sequence of heap files: out0.db, out1.db, ... and returns for each heap file its corresponding file descriptor. */

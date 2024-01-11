@@ -45,4 +45,14 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             hasMoreRecords[minIndex] = 0;
         }
     }
+    int numRecords = HP_GetEntryCount(output_FileDesc);
+    for (int i = 0; i < numRecords; ++i) {
+        Record record;
+        if (HP_GetEntry(output_FileDesc, i, &record) == 0) {
+            // Assuming you have a function to print a record
+            printRecord(record);
+        } else {
+            printf("Failed to read record %d\n", i);
+        }
+    }
 }
