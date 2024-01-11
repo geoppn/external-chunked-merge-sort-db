@@ -84,7 +84,7 @@ CHUNK_RecordIterator CHUNK_CreateRecordIterator(CHUNK *chunk) {
 
 
 int CHUNK_GetNextRecord(CHUNK_RecordIterator *iterator, Record *record) {
-    if (iterator->currentBlockId == iterator->chunk.to_BlockId) { // we changed < to == slay
+    if (iterator->currentBlockId > iterator->chunk.to_BlockId) { // we changed < to == slay
         return -1;  // No more records
     }
     
