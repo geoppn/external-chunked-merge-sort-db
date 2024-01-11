@@ -91,6 +91,8 @@ int CHUNK_GetNextRecord(CHUNK_RecordIterator *iterator, Record *record) {
     if (HP_GetRecord(iterator->chunk.file_desc, iterator->currentBlockId, iterator->cursor, record) == -1) {
         return -1;  // Failed to retrieve record
     }
+
+    HP_Unpin(iterator->chunk.file_desc, iterator->currentBlockId);
     
     // Move to the next record
     iterator->cursor++;
