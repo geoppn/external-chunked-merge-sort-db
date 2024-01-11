@@ -1,8 +1,6 @@
 #include <merge.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <limits.h>
-#include "chunk.h"
 
 void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
     int totalBlocks = HP_GetIdOfLastBlock(input_FileDesc);
@@ -21,12 +19,12 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         int blocksToMerge = remainingChunks < bWay ? remainingChunks : bWay;
 
         // Load blocks from bWay chunks into the buffer
-        CHUNK buffer[bWay]; // Declare buffer as an array of CHUNK structures
         for (int j = 0; j < blocksToMerge; ++j) {
             CHUNK_Iterator iterator = CHUNK_CreateIterator(input_FileDesc, chunkSize);
             if (CHUNK_GetNext(&iterator, &buffer[j]) != 0) {
                 // Handle situation when no more blocks are available in the chunk
                 // You can implement the required logic here, such as loading next chunks or terminating
+                printf("No more blocks available in chunk %d.\n", i + j + 1);
             }
         }
 
@@ -61,6 +59,8 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
                 if (CHUNK_GetNextRecord(&recordIterator, &minRecord) != 0) {
                     // No more records in this block, remove it from the buffer
                     // You can implement the required logic here, such as loading next blocks or removing the block from the buffer
+                    printf("No more records in block %d of chunk %d. Removing from buffer.\n", outputCursor, i + minBlockIndex + 1);
+                    continue;
                 }
             } else {
                 // No more records to process in the blocks within the buffer
@@ -70,6 +70,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             // Check if the output block is full
             if (outputCursor >= HP_GetMaxRecordsInBlock(output_FileDesc)) {
                 // Write the filled output block to the output database
+                HP_Unpin(output_FileDesc, outputBlockId - 1); // Unpin the previous block if exists
                 HP_CloseFile(output_FileDesc);
                 HP_OpenFile("output.db", &output_FileDesc);
                 outputBlockId++;
@@ -81,6 +82,67 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
     }
 
     // Process remaining blocks
-    // You can follow a similar logic as above for the remaining blocks if necessary
-    // Iterate through remainingBlocks or use a different approach based on your requirements
+    if (remainingBlocks > 0) {
+        // Load remaining blocks into the buffer
+        for (int j = 0; j < remainingBlocks; ++j) {
+            CHUNK_Iterator iterator = CHUNK_CreateIterator(input_FileDesc, chunkSize);
+            if (CHUNK_GetNext(&iterator, &buffer[j]) != 0) {
+                // Handle situation when no more blocks are available in the chunk
+                // You can implement the required logic here, such as loading next chunks or terminating
+                printf("No more blocks available in chunk %d.\n", numChunks + j + 1);
+            }
+        }
+
+        // Process records within the buffer
+        int outputCursor = 0; // Cursor for the output block
+
+        // Find the minimum record among the blocks in the buffer
+        while (true) {
+            Record minRecord;
+            minRecord.id = INT_MAX; // Set initial value to the maximum possible integer
+
+            int minBlockIndex = -1;
+
+            // Find the minimum record among the blocks in the buffer
+            for (int j = 0; j < remainingBlocks; ++j) {
+                Record currentRecord;
+                if (CHUNK_GetIthRecordInChunk(&buffer[j], outputCursor, &currentRecord) == 0) {
+                    if (currentRecord.id < minRecord.id) {
+                        minRecord = currentRecord;
+                        minBlockIndex = j; // Keep track of the minimum block index
+                    }
+                }
+            }
+
+            if (minBlockIndex != -1) {
+                // Write the minimum record to the output block
+                HP_InsertEntry(output_FileDesc, minRecord);
+                outputCursor++;
+
+                // Move to the next record in the block that provided the minimum record
+                CHUNK_RecordIterator recordIterator = CHUNK_CreateRecordIterator(&buffer[minBlockIndex]);
+                if (CHUNK_GetNextRecord(&recordIterator, &minRecord) != 0) {
+                    // No more records in this block, remove it from the buffer
+                    // You can implement the required logic here, such as loading next blocks or removing the block from the buffer
+                    printf("No more records in block %d of remaining chunk %d. Removing from buffer.\n", outputCursor, numChunks + minBlockIndex + 1);
+                    continue;
+                }
+            } else {
+                // No more records to process in the blocks within the buffer
+                break;
+            }
+
+            // Check if the output block is full
+            if (outputCursor >= HP_GetMaxRecordsInBlock(output_FileDesc)) {
+                // Write the filled output block to the output database
+                HP_Unpin(output_FileDesc, outputBlockId - 1); // Unpin the previous block if exists
+                HP_CloseFile(output_FileDesc);
+                HP_OpenFile("output.db", &output_FileDesc);
+                outputBlockId++;
+
+                // Reset the cursor for the new output block
+                outputCursor = 0;
+            }
+        }
+    }
 }
