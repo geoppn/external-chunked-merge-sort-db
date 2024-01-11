@@ -4,10 +4,12 @@
 #include <chunk.h>
 
 void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
-    CHUNK chunks[bWay];
-    CHUNK_RecordIterator recordIterators[bWay];
-    Record currentRecords[bWay];
-    bool hasMoreRecords[bWay];
+    int totalBlocks = HP_GetIdOfLastBlock(input_FileDesc);
+    int numChunks = totalBlocks / chunkSize; 
+    CHUNK chunks[numChunks];
+    CHUNK_RecordIterator recordIterators[numChunks];
+    Record currentRecords[numChunks];
+    bool hasMoreRecords[numChunks];
 
     // Initialize chunks and get first record from each chunk
     for (int i = 0; i < bWay; ++i) {
