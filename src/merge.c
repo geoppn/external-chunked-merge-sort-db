@@ -1,6 +1,8 @@
 #include <merge.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <limits.h>
+#include "chunk.h"
 
 void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
     int totalBlocks = HP_GetIdOfLastBlock(input_FileDesc);
@@ -19,6 +21,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         int blocksToMerge = remainingChunks < bWay ? remainingChunks : bWay;
 
         // Load blocks from bWay chunks into the buffer
+        CHUNK buffer[bWay]; // Declare buffer as an array of CHUNK structures
         for (int j = 0; j < blocksToMerge; ++j) {
             CHUNK_Iterator iterator = CHUNK_CreateIterator(input_FileDesc, chunkSize);
             if (CHUNK_GetNext(&iterator, &buffer[j]) != 0) {
