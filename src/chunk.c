@@ -91,9 +91,6 @@ int CHUNK_GetNextRecord(CHUNK_RecordIterator *iterator, Record *record) {
     if (HP_GetRecord(iterator->chunk.file_desc, iterator->currentBlockId, iterator->cursor, record) == -1) {
         return -1;  // Failed to retrieve record
     }
-    printf("pinned flop %d \n",iterator->currentBlockId);
-    printf("%d \n",HP_Unpin(iterator->chunk.file_desc, iterator->currentBlockId));
-    printf("unpinned slay %d \n", iterator->currentBlockId);
     
     // Move to the next record
     iterator->cursor++;
