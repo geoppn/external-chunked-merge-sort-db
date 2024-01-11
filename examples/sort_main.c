@@ -60,8 +60,10 @@ void mergePhases(int inputFileDesc,int chunkSize,int bWay, int* fileCounter){
     merge(inputFileDesc, chunkSize, bWay, oututFileDesc );
     printf("slayQUACK");
     HP_CloseFile(inputFileDesc);
+    printf("closed FLOP input \n");
     chunkSize*=bWay;
     inputFileDesc = oututFileDesc;
+    printf("closed FLOP output \n");
   }
   HP_CloseFile(oututFileDesc);
 }
