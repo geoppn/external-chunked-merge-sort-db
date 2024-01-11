@@ -3,19 +3,20 @@
 #include <stdbool.h>
 #include <string.h>
 
+#define MAX_BUFFERS 10  // Adjust as needed
 
 void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
     int numChunks = HP_GetIdOfLastBlock(input_FileDesc) / chunkSize;
 
     // Initialize CHUNK_Iterators for each chunk
-    CHUNK_Iterator iterators[numChunks];
+    CHUNK_Iterator iterators[MAX_BUFFERS];
     for (int i = 0; i < numChunks; ++i) {
         iterators[i] = CHUNK_CreateIterator(input_FileDesc, chunkSize);
         CHUNK_GetNext(&iterators[i], NULL);  // Move to the first block in each chunk
     }
 
     // Buffers to store the current record from each chunk
-    Record buffers[numChunks];
+    Record buffers[MAX_BUFFERS];
 
     // Initialize the buffers with the first record from each chunk
     for (int i = 0; i < bWay; ++i) {
@@ -32,7 +33,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         Record minRecord;
         for (int i = 0; i < bWay; ++i) {
             if (CHUNK_GetNextRecord(&iterators[i], &buffers[i]) == 0) {
-                if (minChunkIndex == -1 || strcmp(buffers[i].name, minRecord.name) < 0) {
+                if (minChunkIndex == -1 || shouldSwap(&buffers[i], &minRecord)) {
                     minChunkIndex = i;
                     minRecord = buffers[i];
                 }
