@@ -4,9 +4,6 @@
 #include <chunk.h>
 
 void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
-    static int lastProcessedBlock = 0; 
-    int minIndex;
-
     int totalBlocks = HP_GetIdOfLastBlock(input_FileDesc);
     int numChunks = totalBlocks / chunkSize; 
     CHUNK chunks[bWay];
@@ -30,7 +27,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         // Merge records
         while (true) {
             // Find smallest record
-            minIndex = -1;
+            int minIndex = -1;
             for (int i = 0; i < bWay && round + i < numChunks; ++i) {
                 if (hasMoreRecords[i] && (minIndex == -1 || shouldSwap(&currentRecords[minIndex], &currentRecords[i]))) {
                     minIndex = i;
@@ -49,5 +46,4 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             hasMoreRecords[minIndex] = CHUNK_GetNextRecord(&recordIterators[minIndex], &currentRecords[minIndex]) == 0;
         }
     }
-    lastProcessedBlock = recordIterators[minIndex].currentBlockId;
 }

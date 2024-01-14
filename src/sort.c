@@ -35,7 +35,7 @@ void sort_FileInChunks(int file_desc, int numBlocksInChunk) {
         CHUNK chunk;
         chunk.file_desc = file_desc;
         chunk.from_BlockId = firstBlock + i * numBlocksInChunk;
-        chunk.to_BlockId = (i + 1) * numBlocksInChunk -1; // TEAM FLOP: REMOVED -1 AND FIRSTBLOCK 
+        chunk.to_BlockId = (i + 1) * numBlocksInChunk; // TEAM FLOP: REMOVED -1 AND FIRSTBLOCK 
         chunk.blocksInChunk = numBlocksInChunk;
         chunk.recordsInChunk = numBlocksInChunk * HP_GetMaxRecordsInBlock(file_desc);
         
