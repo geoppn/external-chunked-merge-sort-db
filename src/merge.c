@@ -4,6 +4,9 @@
 #include <chunk.h>
 
 void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
+    static int lastProcessedBlock = 0; 
+    int minIndex;
+
     int totalBlocks = HP_GetIdOfLastBlock(input_FileDesc);
     int numChunks = totalBlocks / chunkSize; 
     CHUNK chunks[bWay];
@@ -15,8 +18,8 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         // Initialize chunks and get first record from each chunk
         for (int i = 0; i < bWay && round + i < numChunks; ++i) {
             chunks[i].file_desc = input_FileDesc;
-            chunks[i].from_BlockId = (round + i) * chunkSize + 1;
-            chunks[i].to_BlockId = (round + i + 1) * chunkSize;
+            chunks[i].from_BlockId = (round + i) * chunkSize; // TEAM EDIT: REMOVED +1
+            chunks[i].to_BlockId = (round + i + 1) * chunkSize - 1; // TEAM EDIT: added -1
             chunks[i].blocksInChunk = chunkSize;
             chunks[i].recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(input_FileDesc);
 
@@ -27,7 +30,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         // Merge records
         while (true) {
             // Find smallest record
-            int minIndex = -1;
+            minIndex = -1;
             for (int i = 0; i < bWay && round + i < numChunks; ++i) {
                 if (hasMoreRecords[i] && (minIndex == -1 || shouldSwap(&currentRecords[minIndex], &currentRecords[i]))) {
                     minIndex = i;
@@ -46,4 +49,5 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             hasMoreRecords[minIndex] = CHUNK_GetNextRecord(&recordIterators[minIndex], &currentRecords[minIndex]) == 0;
         }
     }
+    lastProcessedBlock = recordIterators[minIndex].currentBlockId;
 }
