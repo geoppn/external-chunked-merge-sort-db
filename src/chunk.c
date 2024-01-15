@@ -19,11 +19,6 @@ int CHUNK_GetNext(CHUNK_Iterator *iterator, CHUNK *chunk) {
     chunk->from_BlockId = iterator->current;
     chunk->to_BlockId = iterator->current + iterator->blocksInChunk - 1;
 
-    // Check if the calculated to_BlockId exceeds the lastBlocksID
-    if (chunk->to_BlockId > iterator->lastBlocksID) {
-        chunk->to_BlockId = iterator->lastBlocksID;
-    }
-
     // Move to the next chunk
     iterator->current += iterator->blocksInChunk;
 
@@ -34,7 +29,6 @@ int CHUNK_GetNext(CHUNK_Iterator *iterator, CHUNK *chunk) {
 
     return 0;
 }
-
 
 
 int CHUNK_GetIthRecordInChunk(CHUNK *chunk, int i, Record *record) {

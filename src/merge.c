@@ -3,34 +3,47 @@
 #include <stdbool.h>
 #include <chunk.h>
 
-void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc ){
-    // Υποθέτουμε ότι τα chunkSize blocks σχηματίζουν ένα CHUNK.
-    CHUNK_Iterator iterator = CHUNK_CreateIterator(input_FileDesc, chunkSize * bWay);
+void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
+    int totalBlocks = HP_GetIdOfLastBlock(input_FileDesc);
+    int numChunks = totalBlocks / chunkSize; 
+    CHUNK chunks[bWay];
+    CHUNK_RecordIterator recordIterators[bWay];
+    Record currentRecords[bWay];
+    bool hasMoreRecords[bWay];
 
-    // Αρχική δέσμευση μνήμης για τα ενδιάμεσα αρχεία.
-    int numChunks = 0;
-    CHUNK chunk;
-    while (CHUNK_GetNext(&iterator, &chunk) == 0) {
-        numChunks++;
-    }
+    for (int round = 0; round < numChunks; round += bWay) {
+        // Initialize chunks and get first record from each chunk
+        for (int i = 0; i < bWay && round + i < numChunks; ++i) {
+            chunks[i].file_desc = input_FileDesc;
+            chunks[i].from_BlockId = (round + i) * chunkSize + 1; // TEAM EDIT: REMOVED +1
+            chunks[i].to_BlockId = (round + i + 1) * chunkSize; // TEAM EDIT: added -1
+            chunks[i].blocksInChunk = chunkSize;
+            chunks[i].recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(input_FileDesc);
 
-    // Εκκίνηση από την αρχή του αρχείου.
-    iterator = CHUNK_CreateIterator(input_FileDesc, chunkSize * bWay);
-
-    while (numChunks > 1) {
-        // Ένωση των bWay συρμών στο νέο ενδιάμεσο αρχείο.
-        for (int i = 0; i < numChunks; i += bWay) {
-            CHUNK mergedChunk;
-            CHUNK_GetNext(&iterator, &mergedChunk);
-
-            // Ταξινόμηση του mergedChunk.
-            sort_Chunk(&mergedChunk);
+            recordIterators[i] = CHUNK_CreateRecordIterator(&chunks[i]);
+            hasMoreRecords[i] = CHUNK_GetNextRecord(&recordIterators[i], &currentRecords[i]) == 0;
         }
 
-        // Αύξηση του iterator για τον επόμενο κύκλο.
-        iterator = CHUNK_CreateIterator(input_FileDesc, chunkSize * bWay);
+        // Merge records
+        while (true) {
+            // Find smallest record
+            int minIndex = -1;
+            for (int i = 0; i < bWay && round + i < numChunks; ++i) {
+                if (hasMoreRecords[i] && (minIndex == -1 || shouldSwap(&currentRecords[minIndex], &currentRecords[i]))) {
+                    minIndex = i;
+                }
+            }
 
-        // Μείωση του αριθμού των συρμών.
-        numChunks = (numChunks % bWay == 0) ? (numChunks / bWay) : (numChunks / bWay + 1);
+            // If no more records, break
+            if (minIndex == -1) {
+                break;
+            }
+
+            // Write smallest record to output file
+            HP_InsertEntry(output_FileDesc, currentRecords[minIndex]);
+
+            // Get next record from the chunk that provided the smallest record
+            hasMoreRecords[minIndex] = CHUNK_GetNextRecord(&recordIterators[minIndex], &currentRecords[minIndex]) == 0;
+        }
     }
 }
