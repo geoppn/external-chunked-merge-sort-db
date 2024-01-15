@@ -6,6 +6,7 @@
 void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
     int totalBlocks = HP_GetIdOfLastBlock(input_FileDesc);
     int numChunks = totalBlocks / chunkSize;
+    int remainingBlocks = totalBlocks; // TEAM EDIT: ADDED TO HANDLE THE REMAINING BLOCKS FROM NON PERFECT DIVISION
 
     // Initialize arrays for chunks and record iterators
     CHUNK chunks[bWay];
@@ -22,8 +23,8 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         for (int j = 0; j < chunksToMerge; ++j) {
             int chunkIndex = i + j;
             chunks[j].file_desc = input_FileDesc;
-            chunks[j].from_BlockId = chunkIndex * chunkSize;
-            chunks[j].to_BlockId = (chunkIndex + 1) * chunkSize - 1;
+            chunks[j].from_BlockId = chunkIndex * chunkSize + 1; // TEAM EDIT: ADDED +1
+            chunks[j].to_BlockId = (chunkIndex + 1) * chunkSize; // TEAM EDIT: REMOVED -1
             chunks[j].blocksInChunk = chunkSize;
             chunks[j].recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(input_FileDesc);
 
@@ -50,10 +51,28 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             }
 
             // Insert the minimum record into the output file
-            HP_InsertRecord(output_FileDesc, currentRecords[minChunkIndex]);
+            HP_InsertEntry(output_FileDesc, currentRecords[minChunkIndex]); // TEAM EDIT: FIXED INSERTRECORD TO INSERTENTRY
 
             // Get the next record from the same chunk
             hasMoreRecords[minChunkIndex] = CHUNK_GetNextRecord(&recordIterators[minChunkIndex], &currentRecords[minChunkIndex]) == 0;
         }
     }
+     if (remainingBlocks > 0) {
+        CHUNK remainingChunk;
+        remainingChunk.file_desc = input_FileDesc;
+        remainingChunk.from_BlockId = numChunks * chunkSize + 1;
+        remainingChunk.to_BlockId = totalBlocks;
+        remainingChunk.blocksInChunk = remainingBlocks;
+        remainingChunk.recordsInChunk = remainingBlocks * HP_GetMaxRecordsInBlock(input_FileDesc);
+
+        CHUNK_RecordIterator remainingRecordIterator = CHUNK_CreateRecordIterator(&remainingChunk);
+        Record remainingRecord;
+        bool hasMoreRemainingRecords = CHUNK_GetNextRecord(&remainingRecordIterator, &remainingRecord) == 0;
+
+        while (hasMoreRemainingRecords) {
+            HP_InsertEntry(output_FileDesc, remainingRecord);
+            hasMoreRemainingRecords = CHUNK_GetNextRecord(&remainingRecordIterator, &remainingRecord) == 0;
+        }
+    }
+
 }

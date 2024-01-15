@@ -94,7 +94,7 @@ int CHUNK_GetNextRecord(CHUNK_RecordIterator *iterator, Record *record) {
     
     // Move to the next record
     iterator->cursor++;
-    if (iterator->cursor > HP_GetMaxRecordsInBlock(iterator->chunk.file_desc) - 1) { // team flop: removed =
+    if (iterator->cursor > HP_GetMaxRecordsInBlock(iterator->chunk.file_desc) - 1) { // TEAM EDIT: REMOVED =
         iterator->currentBlockId++;
         iterator->cursor = 0;  // Move to the next block
     }

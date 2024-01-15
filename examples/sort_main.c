@@ -23,11 +23,8 @@ int main() {
   //
   BF_Init(LRU);
   int file_desc = createAndPopulateHeapFile(FILE_NAME);
-  printf("slay1");
   sortPhase(file_desc,chunkSize);
-  printf("slay2");
   mergePhases(file_desc,chunkSize,bWay,&fileIterator);
-  printf("slay3");
 }
 
 int createAndPopulateHeapFile(char* filename){
@@ -57,9 +54,7 @@ void mergePhases(int inputFileDesc,int chunkSize,int bWay, int* fileCounter){
   // MIN KSEXASEIS NA BALEIS TO WHILE :)
   // while(chunkSize<HP_GetIdOfLastBlock(inputFileDesc)-1){
     oututFileDesc =   nextOutputFile(fileCounter);
-    printf("slay69");
     merge(inputFileDesc, chunkSize, bWay, oututFileDesc );
-    printf("slayQUACK");
     HP_CloseFile(inputFileDesc);
     chunkSize*=bWay;
     inputFileDesc = oututFileDesc;
