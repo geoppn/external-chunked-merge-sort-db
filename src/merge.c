@@ -10,8 +10,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
     Record currentRecords[bWay];
     bool hasMoreRecords[bWay];
 
-    int totalBlocks = HP_GetIdOfLastBlock(input_FileDesc);
-    int offset = (totalBlocks / (chunkSize * bWay)) * chunkSize * bWay;
+    int offset = output_FileDesc * chunkSize * bWay;
 
     // Initialize chunks and get first record from each chunk
     for (int i = 0; i < bWay; ++i) {
