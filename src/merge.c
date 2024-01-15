@@ -3,20 +3,19 @@
 #include <stdbool.h>
 #include <chunk.h>
 
-
 void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
+    static int nextUnprocessedBlock = 0;
+
     CHUNK chunks[bWay];
     CHUNK_RecordIterator recordIterators[bWay];
     Record currentRecords[bWay];
     bool hasMoreRecords[bWay];
 
-    int offset = output_FileDesc * chunkSize * bWay;
-
     // Initialize chunks and get first record from each chunk
     for (int i = 0; i < bWay; ++i) {
         chunks[i].file_desc = input_FileDesc;
-        chunks[i].from_BlockId = offset + i * chunkSize + 1; // +1
-        chunks[i].to_BlockId = offset + (i + 1) * chunkSize; // -1
+        chunks[i].from_BlockId = nextUnprocessedBlock + i * chunkSize;
+        chunks[i].to_BlockId = nextUnprocessedBlock + (i + 1) * chunkSize - 1;
         chunks[i].blocksInChunk = chunkSize;
         chunks[i].recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(input_FileDesc);
 
@@ -45,4 +44,6 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
         // Get next record from the chunk that provided the smallest record
         hasMoreRecords[minIndex] = CHUNK_GetNextRecord(&recordIterators[minIndex], &currentRecords[minIndex]) == 0;
     }
+
+    nextUnprocessedBlock += bWay * chunkSize;
 }
