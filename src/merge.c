@@ -10,11 +10,14 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
     Record currentRecords[bWay];
     bool hasMoreRecords[bWay];
 
+    int totalBlocks = HP_GetIdOfLastBlock(input_FileDesc);
+    int offset = (totalBlocks / (chunkSize * bWay)) * chunkSize * bWay;
+
     // Initialize chunks and get first record from each chunk
     for (int i = 0; i < bWay; ++i) {
         chunks[i].file_desc = input_FileDesc;
-        chunks[i].from_BlockId = i * chunkSize;
-        chunks[i].to_BlockId = (i + 1) * chunkSize - 1;
+        chunks[i].from_BlockId = offset + i * chunkSize + 1; // +1
+        chunks[i].to_BlockId = offset + (i + 1) * chunkSize; // -1
         chunks[i].blocksInChunk = chunkSize;
         chunks[i].recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(input_FileDesc);
 
