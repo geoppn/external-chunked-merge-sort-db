@@ -22,7 +22,7 @@ int CHUNK_GetNext(CHUNK_Iterator *iterator, CHUNK *chunk) {
     // Move to the next chunk
     iterator->current += iterator->blocksInChunk;
 
-    if (iterator->current > iterator->lastBlocksID) {
+    if (iterator->current > iterator->lastBlocksID+1) {
         // No more chunks to read
         return -1;
     }
