@@ -10,14 +10,13 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
     Record currentRecords[bWay];
     bool hasMoreRecords[bWay];
 
-    for (int round = 0; round < numChunks; round += bWay) {
-        // Initialize chunks and get first record from each chunk
-        for (int i = 0; i < bWay && round + i < numChunks; ++i) {
-            chunks[i].file_desc = input_FileDesc;
-            chunks[i].from_BlockId = (round + i) * chunkSize + 1; // TEAM EDIT: REMOVED +1
-            chunks[i].to_BlockId = (round + i + 1) * chunkSize; // TEAM EDIT: added -1
-            chunks[i].blocksInChunk = chunkSize;
-            chunks[i].recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(input_FileDesc);
+    // Initialize chunks and get first record from each chunk
+    for (int i = 0; i < bWay; ++i) {
+        chunks[i].file_desc = input_FileDesc;
+        chunks[i].from_BlockId = i * chunkSize;
+        chunks[i].to_BlockId = (i + 1) * chunkSize - 1;
+        chunks[i].blocksInChunk = chunkSize;
+        chunks[i].recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(input_FileDesc);
 
         recordIterators[i] = CHUNK_CreateRecordIterator(&chunks[i]);
         hasMoreRecords[i] = CHUNK_GetNextRecord(&recordIterators[i], &currentRecords[i]) == 0;
