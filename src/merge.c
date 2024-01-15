@@ -57,7 +57,7 @@ void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
             hasMoreRecords[minChunkIndex] = CHUNK_GetNextRecord(&recordIterators[minChunkIndex], &currentRecords[minChunkIndex]) == 0;
         }
     }
-     if (remainingBlocks > 0) {
+    if (remainingBlocks > 0) {
         CHUNK remainingChunk;
         remainingChunk.file_desc = input_FileDesc;
         remainingChunk.from_BlockId = numChunks * chunkSize + 1;

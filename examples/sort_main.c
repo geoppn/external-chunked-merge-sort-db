@@ -51,14 +51,12 @@ void sortPhase(int file_desc,int chunkSize){
 /* Performs the merge phase of the external merge sort algorithm  using chunks of size 'chunkSize' and 'bWay' merging. The merge phase may be performed in more than one cycles.*/
 void mergePhases(int inputFileDesc,int chunkSize,int bWay, int* fileCounter){
   int oututFileDesc;
-  // MIN KSEXASEIS NA BALEIS TO WHILE :)
-  // while(chunkSize<HP_GetIdOfLastBlock(inputFileDesc)-1){
-    oututFileDesc =   nextOutputFile(fileCounter);
-    merge(inputFileDesc, chunkSize, bWay, oututFileDesc );
-    HP_CloseFile(inputFileDesc);
-    chunkSize*=bWay;
-    inputFileDesc = oututFileDesc;
-  // }
+  // TEAM EDIT: REMOVED THE WHILE LOOP SINCE ROUNDS ARE HANDLED IN OUR MERGE
+  oututFileDesc =   nextOutputFile(fileCounter);
+  merge(inputFileDesc, chunkSize, bWay, oututFileDesc );
+  HP_CloseFile(inputFileDesc);
+  chunkSize*=bWay;
+  inputFileDesc = oututFileDesc;
   HP_PrintAllEntries(oututFileDesc);
   HP_CloseFile(oututFileDesc);
 }
