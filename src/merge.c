@@ -3,12 +3,14 @@
 #include <stdbool.h>
 #include <chunk.h>
 
-void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc, int roundChunks) {
+void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
     // Initialize arrays for chunks and record iterators
     CHUNK chunks[bWay];
     CHUNK_RecordIterator recordIterators[bWay];
     bool hasMoreRecords[bWay];
     Record currentRecords[bWay];
+
+    int roundChunks = bWay;  // Set the number of chunks for this round
 
     // Initialize and open 'roundChunks' chunks for this round
     for (int i = 0; i < roundChunks; ++i) {
