@@ -13,21 +13,34 @@ CHUNK_Iterator CHUNK_CreateIterator(int fileDesc, int blocksInChunk){
     return iterator;
 }
 
-int CHUNK_GetNext(CHUNK_Iterator *iterator, CHUNK *chunk) {
-    // Set CHUNK details
-    chunk->file_desc = iterator->file_desc;
-    chunk->from_BlockId = iterator->current;
-    chunk->to_BlockId = iterator->current + iterator->blocksInChunk - 1;
+int CHUNK_GetNext(CHUNK_Iterator *iterator,CHUNK* chunk){
+    if ((iterator->current - 1) * iterator->blocksInChunk <= iterator->lastBlocksID) {
+        int maxRecordsInBlock = HP_GetMaxRecordsInBlock(iterator->file_desc);
+        int currentChunkFirstBlock = 1 + (iterator->current - 1) * iterator->blocksInChunk;
+        int currentChunkLastBlock = min(currentChunkFirstBlock + iterator->blocksInChunk - 1, iterator->lastBlocksID);
+        int blocksInChunk = currentChunkLastBlock - currentChunkFirstBlock + 1;
+        int recordsInChunk = getRecordsInBlocks(
+            iterator->file_desc, 
+            currentChunkFirstBlock, 
+            currentChunkLastBlock
+        );
+        
+        CHUNK newChunk = {
+            .file_desc = iterator->file_desc,
+            .from_BlockId = currentChunkFirstBlock,
+            .to_BlockId = currentChunkLastBlock,
+            .recordsInChunk = recordsInChunk,
+            .blocksInChunk = blocksInChunk
+        };
+        *chunk = newChunk;
 
-    // Move to the next chunk
-    iterator->current += iterator->blocksInChunk;
+        // Update iterator for the next chunk
+        iterator->current++;
 
-    if (iterator->current > iterator->lastBlocksID+1) {
-        // No more chunks to read
-        return -1;
+        return 0;  // Success
+    } else {
+        return -1;  // No more chunks
     }
-
-    return 0;
 }
 
 
