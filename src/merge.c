@@ -3,47 +3,52 @@
 #include <stdbool.h>
 #include <chunk.h>
 
-void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc) {
-    static int nextUnprocessedBlock = 0;
-
+void merge(int input_FileDesc, int chunkSize, int bWay, int output_FileDesc, int roundChunks) {
+    // Initialize arrays for chunks and record iterators
     CHUNK chunks[bWay];
     CHUNK_RecordIterator recordIterators[bWay];
-    Record currentRecords[bWay];
     bool hasMoreRecords[bWay];
 
-    // Initialize chunks and get first record from each chunk
-    for (int i = 0; i < bWay; ++i) {
+    // Initialize and open 'roundChunks' chunks for this round
+    for (int i = 0; i < roundChunks; ++i) {
         chunks[i].file_desc = input_FileDesc;
-        chunks[i].from_BlockId = nextUnprocessedBlock + i * chunkSize;
-        chunks[i].to_BlockId = nextUnprocessedBlock + (i + 1) * chunkSize - 1;
+        chunks[i].from_BlockId = i * chunkSize + roundChunks * chunkSize * (output_FileDesc - 1);
+        chunks[i].to_BlockId = (i + 1) * chunkSize + roundChunks * chunkSize * (output_FileDesc - 1) - 1;
         chunks[i].blocksInChunk = chunkSize;
         chunks[i].recordsInChunk = chunkSize * HP_GetMaxRecordsInBlock(input_FileDesc);
 
         recordIterators[i] = CHUNK_CreateRecordIterator(&chunks[i]);
-        hasMoreRecords[i] = CHUNK_GetNextRecord(&recordIterators[i], &currentRecords[i]) == 0;
+        hasMoreRecords[i] = true;
     }
 
-    // Merge records
+    // Merge 'roundChunks' chunks from input_FileDesc to output_FileDesc
+    Record minRecord;
+    bool hasMinRecord = false;
+    
     while (true) {
-        // Find smallest record
-        int minIndex = -1;
-        for (int i = 0; i < bWay; ++i) {
-            if (hasMoreRecords[i] && (minIndex == -1 || shouldSwap(&currentRecords[minIndex], &currentRecords[i]))) {
-                minIndex = i;
+        int minChunkIndex = -1;
+
+        // Find the chunk with the minimum record
+        for (int j = 0; j < roundChunks; ++j) {
+            if (hasMoreRecords[j] && CHUNK_GetNextRecord(&recordIterators[j], &minRecord) == 0) {
+                if (!hasMinRecord || shouldSwap(&minRecord, &chunks[minChunkIndex].from_Record) > 0) {
+                    minChunkIndex = j;
+                    hasMinRecord = true;
+                }
+            } else {
+                hasMoreRecords[j] = false;
             }
         }
 
-        // If no more records, break
-        if (minIndex == -1) {
+        // No more records to merge
+        if (minChunkIndex == -1) {
             break;
         }
 
-        // Write smallest record to output file
-        HP_InsertEntry(output_FileDesc, currentRecords[minIndex]);
-
-        // Get next record from the chunk that provided the smallest record
-        hasMoreRecords[minIndex] = CHUNK_GetNextRecord(&recordIterators[minIndex], &currentRecords[minIndex]) == 0;
+        // Insert the minimum record into the output file
+        if (HP_InsertRecord(output_FileDesc, minRecord) != 1) {
+            fprintf(stderr, "Error: Failed to insert record into the output file.\n");
+            return;
+        }
     }
-
-    nextUnprocessedBlock += bWay * chunkSize;
 }
